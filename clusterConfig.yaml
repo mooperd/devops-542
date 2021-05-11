@@ -10,7 +10,8 @@ metadata:
 
 vpc:
   nat:
-    gateway: HighlyAvailable # other options: Disable, Single (default)
+    gateway: Single  # Valid variants are: "HighlyAvailable" configures a highly available NAT gateway, "Single" configures a single NAT gateway (default), "Disable" disables NAT.
+    cidr: 10.142.0.0/16
 
 nodeGroups:
   - name: ng-1
