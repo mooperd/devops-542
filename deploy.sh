@@ -42,16 +42,16 @@ if [ -z "$database_vpc" ]
         
         # Iterate through the arrays to create subnets for databases. We want one subnet in each availability zone.
         subnet_ids=()
-        for subnet in "${!subnetsCidr[@]}"
+        for subnet in "${!dbs_subnets_cidr[@]}"
             do
-                echo "${subnetsCidr[subnet]}" is in "${subnetsNames[subnet]}"
+                echo "${dbs_subnets_cidr[subnet]}" is in "${dbs_subnets_names[subnet]}"
                 subnet_ids+=( $( \
                         aws ec2 create-subnet \
                         --vpc-id $database_vpc \
-                        --cidr-block ${subnetsCidr[subnet]} \
-                        --availability-zone-id ${availabilityZones[subnet]} \
+                        --cidr-block ${dbs_subnets_cidr[subnet]} \
+                        --availability-zone-id ${availability_zones[subnet]} \
                         --output text --query 'Subnet.[SubnetId]' \
-                        --tag-specifications "ResourceType=subnet, Tags=[{Key=Name,Value=${subnetsNames[subnet]}}]" \
+                        --tag-specifications "ResourceType=subnet, Tags=[{Key=Name,Value=${dbs_subnets_names[subnet]}}]" \
                         ) )
             done
 
