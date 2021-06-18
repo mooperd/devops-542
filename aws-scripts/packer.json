@@ -1,0 +1,30 @@
+{
+  "variables": {
+    "instance_name": "gitlab-runner-instance-{{timestamp}}",
+    "project_id": "{{env `GCP_RUNNER_PROJECT_ID`}}",
+    "build_name": null
+  },
+  "builders": [{
+    "type": "amazon-ebs",
+    "ami_name": "packer-ami-{{timestamp}}",
+    "source_ami": "ami-0194c3e07668a7e36",
+    "region": "eu-west-2",
+    "instance_type": "t2.medium",
+    "communicator": "ssh",
+    "ssh_username": "ubuntu",
+    "tags": {"Name": "{{user `build_name`}}"}
+    }],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "scripts/install_dependencies.sh",
+      "destination": "/tmp/install_dependencies.sh"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo /bin/bash /tmp/install_dependencies.sh"
+      ]
+    }
+  ]
+}

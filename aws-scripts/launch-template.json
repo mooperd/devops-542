@@ -1,0 +1,16 @@
+{
+	"NetworkInterfaces": [{
+		"AssociatePublicIpAddress": true,
+		"DeviceIndex": 0,
+		"SubnetId": "$GITLAB_RUNNER_SUBNET"
+	}],
+	"ImageId": "$GITLAB_RUNNER_AMI",
+	"InstanceType": "t2.small",
+	"TagSpecifications": [{
+		"ResourceType": "instance",
+		"Tags": [{
+			"Key": "Name",
+			"Value": "webserver"
+		}]
+	}]
+}
