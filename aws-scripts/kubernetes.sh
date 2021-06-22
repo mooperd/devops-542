@@ -51,42 +51,6 @@ k8s_vpc=$( \
 # This will create a public facing AWS load balancer automatically assigned to the cluster. 
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.46.0/deploy/static/provider/aws/deploy.yaml
 
-# Create VPC peering connection between database VPC and Kubernetes VPC
-vpc_peering_connection_id=$( \
-        aws ec2 create-vpc-peering-connection \
-        --vpc-id $database_vpc \
-        --peer-vpc-id $k8s_vpc \
-        --output=text \
-        --query 'VpcPeeringConnection.[VpcPeeringConnectionId]' \
-        )
-
-aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id $vpc_peering_connection_id --query 'VpcPeeringConnection.[VpcPeeringConnectionId]'
-
-# Get route tables that we need to update for VPC peering
-
-k8s_vpc_route_table=$( \
-             aws ec2 describe-route-tables \
-             --filters Name=vpc-id,Values=$k8s_vpc Name=association.main,Values=true \
-             --output=text \
-             --query 'RouteTables[].[RouteTableId]' \
-             )
-
-dbs_vpc_route_table=$( \
-             aws ec2 describe-route-tables \
-             --filters Name=vpc-id,Values=$database_vpc Name=association.main,Values=true \
-             --output=text \
-             --query 'RouteTables[].[RouteTableId]')
-
-aws ec2 create-route \
-             --route-table-id $k8s_vpc_route_table \
-             --destination-cidr-block $dbs_vpc_cidr_block \
-             --vpc-peering-connection-id $vpc_peering_connection_id
-
-aws ec2 create-route \
-             --route-table-id $dbs_vpc_route_table \
-             --destination-cidr-block $k8s_vpc_cidr_block \
-             --vpc-peering-connection-id $vpc_peering_connection_id
-
 # Find the public endpoint of our kubernetes cluster.
 export ingress_external_endpoint=$(kubectl get service ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 echo "public endpoint of our kubernetes cluster is $ingress_external_endpoint. You probably need to do something with that."

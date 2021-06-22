@@ -25,9 +25,15 @@ dbs_vpc_cidr_block=$(aws ec2 describe-vpcs \
 
 # Grab the route tables for the private subnets in the Kubernetes vpc 
 k8s_route_tables=$(aws ec2 describe-route-tables \
-        --filters 'Name=tag:Name,Values=*Private*' 'Name=vpc-id,Values=vpc-021c2c500d2abff04' \
+        --filters Name=tag:Name,Values=*Private* Name=vpc-id,Values=$k8s_vpc \
         --query 'RouteTables[].Associations[].RouteTableId' \
         --output=text)
+
+# Grab the route tables for the database vpc
+dbs_vpc_route_table=$(aws ec2 describe-route-tables \
+             --filters Name=vpc-id,Values=$database_vpc Name=association.main,Values=true \
+             --output=text \
+             --query 'RouteTables[].[RouteTableId]')
 
 # Create VPC peering connection between database VPC and Kubernetes VPC
 vpc_peering_connection_id=$( \
@@ -39,18 +45,6 @@ vpc_peering_connection_id=$( \
         )
 
 aws ec2 accept-vpc-peering-connection --vpc-peering-connection-id $vpc_peering_connection_id --query 'VpcPeeringConnection.[VpcPeeringConnectionId]'
-
-# Grab the route tables for the private subnets in the Kubernetes vpc 
-k8s_route_tables=$(aws ec2 describe-route-tables \
-        --filters 'Name=tag:Name,Values=*Private*' 'Name=vpc-id,Values=vpc-021c2c500d2abff04' \
-        --query 'RouteTables[].Associations[].RouteTableId' \
-        --output=text)
-
-# Grab the route tables for the database vpc
-dbs_vpc_route_table=$(aws ec2 describe-route-tables \
-             --filters Name=vpc-id,Values=$database_vpc Name=association.main,Values=true \
-             --output=text \
-             --query 'RouteTables[].[RouteTableId]')
 
 # Create route table entries in database VPC
 aws ec2 create-route \
