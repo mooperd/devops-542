@@ -29,10 +29,11 @@ spec:
     spec:
       containers:
         - name: app
-          image: centos
+          image: public.ecr.aws/z3g6z3t0/perl:5.14.4-threaded
           command: ["/bin/bash"]
-          # args: ["-c", "cd /data; while true; do dd if=/dev/zero of=$(hostname)-$(date +%s%N) bs=1G count=1; done"]
-          args: ["-c", "cd /data; find . -type f -exec rm -v {} \\;"]
+          # args: ["-c", "cd /data; while true; do dd if=/dev/zero of=$(hostname)-$(date +%s%N) oflag=direct bs=16k count=1000 2>&1 | grep bytes; done "]
+          # args: ["-c", "cd /data; perl -e 'for(<*>){((stat)[9]<(unlink))}';"]
+          args: ["-c", "while true; do sleep 10; done"]
           volumeMounts:
             - name: persistent-storage
               mountPath: /data

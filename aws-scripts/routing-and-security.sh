@@ -1,5 +1,6 @@
 #!/bin/bash
 set -xeuo pipefail
+alias aws='/usr/local/bin/aws'
 
 # AWS Region
 export AWS_DEFAULT_REGION=eu-west-2 

@@ -1,9 +1,10 @@
 #!/bin/bash
 # https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html
 set -euxo pipefail
+alias aws='/usr/local/bin/aws'
 
 # cluster_name=$(git rev-parse --short HEAD)
-export cluster_name=73d725d
+export cluster_name=d56baae
 # filesystem_id=fs-d1f11b21
 export AWS_ACCOUNT_ID=533016277303
 export AWS_DEFAULT_REGION=eu-west-2
@@ -53,6 +54,20 @@ for subnet in $k8s_private_subnets
             --subnet-id $subnet \
             --security-groups $security_group_id
     done
+
+# We have to create an identity provider within AWS so that stuff inside Kubernetes can authenenticate for access to resources such as EFS.
+# This mess of a command creates an id provider and returns its ID. If the provider already exists the ID is returned.  
+oidc_provider_id=$(eksctl utils associate-iam-oidc-provider \
+        --cluster $cluster_name \
+        --approve \
+        --verbose 4 \
+        | grep Issuer \
+        | sed -E 's/[^[:alnum:][:space:]]/ /g' \
+        | awk 'BEGIN { FS = " " } ; { print $NF }')
+
+#TODO: We want to tag this provider 
+
+
 
 # Do shit on the kubernetes side
 eksctl create iamserviceaccount \

@@ -1,15 +1,6 @@
 #!/bin/bash
 set -xeuo pipefail
-
-# ┌───────────────────────────────────────────────┐
-# │                AWS LOAD BALANCER              │
-# └───────────────────────────────────────────────┘
-#
-# ┌────────────┐    ┌────────────┐   ┌────────────┐
-# │            │    │            │   │            │
-# │ K8s Node 1 │    │ K8s Node 2 │   │ K8s Node 3 │
-# │            │    │            │   │            │
-# └────────────┘    └────────────┘   └────────────┘
+alias aws='/usr/local/bin/aws'
 
 # AWS Region
 export AWS_DEFAULT_REGION=eu-west-2 

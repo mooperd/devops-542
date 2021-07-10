@@ -1,0 +1,86 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: $PV_NAME
+spec:
+  storageClassName: efs-sc-1
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  mountOptions:
+    - tls
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: fs-50d82da0
+    volumeAttributes:
+      path: "/$RANDOM_SPRING"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: $PVC_NAME
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: efs-sc-1
+  volumeName: $PV_NAME
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smash
+  labels:
+    app: smash
+spec:
+  replicas: 5
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: smash
+  template:
+    metadata:
+      name: smash
+      labels:
+        app: smash
+        tier: web
+    spec:
+      volumes:
+        - name: efs-volume
+          persistentVolumeClaim:
+            claimName: $PVC_NAME
+      containers:
+        - name: smash
+          command: ["/bin/bash"]
+          args: ["-c", "cd /mnt/efs-test2; while true; do dd if=/dev/zero of=$(hostname)-$(date +%s%N) oflag=direct bs=16k count=1000 2>&1 | grep bytes; sleep 600; done "]
+          image: ubuntu
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /mnt/efs-test2
+              name: efs-volume
+              readOnly: false
+#---
+#apiVersion: v1
+#kind: Pod
+#metadata:
+#  name: efs
+#spec:
+#  serviceAccountName: $SERVICE_ACCOUNT_NAME
+#  containers:
+#    - name: aws-cli-pod
+#      image: amazon/aws-cli
+#      command: [ "/bin/bash", "-c", "--" ]
+#      args: [ "cd /mnt/efs-test2; while true; do sleep 60; aws s3 sync . s3://invalidbucketname; done;" ]
+#      volumeMounts:
+#        - mountPath: /mnt/efs-test2
+#          name: $PV_NAME-vol
+#          readOnly: false
+#  volumes:
+#    - name: $PV_NAME-vol
+#      persistentVolumeClaim:
+#        claimName: $PV_NAME-pvc
